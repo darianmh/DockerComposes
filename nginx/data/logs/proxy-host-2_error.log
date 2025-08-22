@@ -1,0 +1,1 @@
+2025/08/22 13:58:16 [warn] 234#234: *161 an upstream response is buffered to a temporary file /var/cache/nginx/proxy_temp/2/00/0000000002 while reading upstream, client: 77.237.85.161, server: noorapi.ls1.ir, request: "GET /scalar/scalar.js HTTP/1.1", upstream: "http://172.21.0.4:8080/scalar/scalar.js", host: "noorapi.ls1.ir", referrer: "http://noorapi.ls1.ir/scalar/"
