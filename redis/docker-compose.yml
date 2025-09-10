@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-myredispassword}
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - redis-network
+      - websites
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Redis Insight - Web UI for Redis management (optional)
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    networks:
+      - redis-network
+      - websites
+    depends_on:
+      - redis
+    environment:
+      - RIPORT=8001
+    profiles:
+      - tools
+
+  # Example application container showing how to connect
+  app-example:
+    image: node:18-alpine
+    container_name: app-example
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./app:/app
+    networks:
+      - redis-network
+      - websites
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-myredispassword}@redis:6379/0
+    profiles:
+      - example
+    command: tail -f /dev/null  # Keep container running for testing
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  redis-network:
+    driver: bridge
+  websites:
+    external: true
